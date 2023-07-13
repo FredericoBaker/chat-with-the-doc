@@ -1,7 +1,7 @@
 # 📄 Chat with the doc - Version 2
 Project using langchain and streamlit to do a web app that allows you to chat with a document. In this version the web app have a chat like UI with conversation memory.
 
-![screenshot]()
+![screenshot](image_2023-07-13_175401997.png)
 
 ## How to run it locally
 Follow these steps to set up and run the service locally :
