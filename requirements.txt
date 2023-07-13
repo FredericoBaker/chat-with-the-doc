@@ -1,0 +1,13 @@
+openai
+langchain
+pandasai
+pdfplumber
+pypdf
+streamlit
+streamlit-chat
+tiktoken
+faiss-cpu
+youtube-transcript-api
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
