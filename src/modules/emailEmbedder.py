@@ -1,13 +1,15 @@
 import os
 import pickle
 import tempfile
+from langchain.document_loaders.csv_loader import CSVLoader
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import JSONLoader
 from langchain.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-class Embedder:
+class EmailEmbedder:
 
     def __init__(self):
         self.PATH = "embeddings"
@@ -17,50 +19,39 @@ class Embedder:
         if not os.path.exists(self.PATH):
             os.mkdir(self.PATH)
 
-    def getFileExtension(self, uploadedFile):
-        fileExtension = os.path.splitext(uploadedFile)[1].lower()
-        return fileExtension
-
-    def storeDocEmbeddings(self, file, originalFileName):
-        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmpFile:
-            tmpFile.write(file)
-            tmpFilePath = tmpFile.name
-
-        fileExtension = self.getFileExtension(originalFileName)
+    def storeDocEmbeddings(self, originalFileName):
 
         textSplitter = RecursiveCharacterTextSplitter(
             chunk_size=2000,
             chunk_overlap=100,
             length_function=len
         )
-        
-        if fileExtension == ".pdf":
-            loader = PyPDFLoader(file_path=tmpFilePath)
-            data = loader.load_and_split(text_splitter=textSplitter)
-        
-        if fileExtension == ".txt":
-            loader = TextLoader(file_path=tmpFilePath, encoding="utf-8")
-            data = loader.load_and_split(text_splitter=textSplitter)
+
+        def metadata_func(record: dict, metadata: dict) -> dict:
+            metadata["sender"] = record.get("sender")
+            metadata["date"] = record.get("date")
+            metadata["subject"] = record.get("subject")
+            return metadata
+
+        loader = JSONLoader(file_path=originalFileName, 
+                            jq_schema='.messages[]', 
+                            content_key='body',
+                            metadata_func=metadata_func)
+        data = loader.load()
 
         embeddings = OpenAIEmbeddings()
 
         vectors = FAISS.from_documents(data, embeddings)
-        os.remove(tmpFilePath)
+        os.remove(originalFileName)
 
         with open(f"{self.PATH}/{originalFileName}.pkl", "wb") as file:
             pickle.dump(vectors, file)
 
-    def getDocEmbeddings(self, file, originalFileName):
+    def getDocEmbeddings(self, originalFileName):
         if not os.path.isfile(f"{self.PATH}/{originalFileName}.pkl"):
-            self.storeDocEmbeddings(file, originalFileName)
+            self.storeDocEmbeddings(originalFileName)
         
         with open(f"{self.PATH}/{originalFileName}.pkl", "rb") as file:
             vectors = pickle.load(file)
 
         return vectors
-            
-
-
-
-
-        

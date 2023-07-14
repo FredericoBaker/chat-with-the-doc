@@ -17,20 +17,20 @@ class ChatHistory:
     def initializeUserHistory(self):
         st.session_state["user"] = [self.defaultGreeting()]
     
-    def initializeAssistantHistory(self, uploadedFile):
-        st.session_state["assistant"] = [self.defaultPrompt(uploadedFile.name)]
+    def initializeAssistantHistory(self, uploadedFileName):
+        st.session_state["assistant"] = [self.defaultPrompt(uploadedFileName)]
 
-    def initialize(self, uploadedFile):
+    def initialize(self, uploadedFileName):
         if "user" not in st.session_state:
             self.initializeUserHistory()
         if "assistant" not in st.session_state:
-            self.initializeAssistantHistory(uploadedFile)
+            self.initializeAssistantHistory(uploadedFileName)
 
-    def reset(self, uploadedFile):
+    def reset(self, uploadedFileName):
         st.session_state["history"] = []
 
         self.initializeUserHistory()
-        self.initializeAssistantHistory(uploadedFile)
+        self.initializeAssistantHistory(uploadedFileName)
         st.session_state["reset_chat"] = False
 
     def append(self, mode, message):
