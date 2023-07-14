@@ -7,6 +7,8 @@ import datetime
 import json
 
 import google.auth
+from oauth2client import client
+from oauth2client import tools
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -56,8 +58,10 @@ class Utilities:
                 else:
                     connectGmailButton = st.sidebar.button("Connect gmail account")
                     if connectGmailButton:
-                        flow = InstalledAppFlow.from_client_secrets_file('gmail_credentials/credentials.json', SCOPES)
-                        creds = flow.run_local_server(port=0)
+                        #flow = InstalledAppFlow.from_client_secrets_file('gmail_credentials/credentials.json', SCOPES)
+                        #creds = flow.run_local_server(port=0)
+                        flow = client.flow_from_clientsecrets('gmail_credentials/credentials.json', SCOPES)
+                        creds = tools.run_flow(flow=flow)
                         st.sidebar.success("Gmail connected!")
                         # Save the credentials for the next run
                         with open('gmail_credentials/token.json', 'w') as token:
