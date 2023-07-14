@@ -12,4 +12,5 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 jq
+oauth2client
 httpx-oauth
