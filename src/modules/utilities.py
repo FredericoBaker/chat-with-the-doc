@@ -5,8 +5,10 @@ import pdfplumber
 import base64
 import datetime
 import json
+import asyncio
 
 import google.auth
+from httpx_oauth.clients.google import GoogleOAuth2
 from oauth2client import client
 from oauth2client import tools
 from google.auth.transport.requests import Request
@@ -19,6 +21,28 @@ from modules.chatbot import Chatbot
 from modules.emailChatbot import EmailChatbot
 from modules.embedder import Embedder
 from modules.emailEmbedder import EmailEmbedder
+
+async def write_authorization_url(client,
+                                  redirect_uri):
+    authorization_url = await client.get_authorization_url(
+        redirect_uri,
+        scope=["profile", "email"],
+        extras_params={"access_type": "offline"},
+    )
+    return authorization_url
+
+
+async def write_access_token(client,
+                             redirect_uri,
+                             code):
+    token = await client.get_access_token(code, redirect_uri)
+    return token
+
+
+async def get_email(client,
+                    token):
+    user_id, user_email = await client.get_id_email(token)
+    return user_id, user_email
 
 class Utilities:
 
@@ -44,28 +68,58 @@ class Utilities:
     
     @staticmethod
     def loadGmailMessages():
-        def connectGmail():
-            SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-            creds = None
+        client_id = os.environ['GOOGLE_CLIENT_ID']
+        client_secret = os.environ['GOOGLE_CLIENT_SECRET']
+        redirect_uri = os.environ['REDIRECT_URI']
+        
+        SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-            if os.path.exists('gmail_credentials/token.json'):
-                creds = Credentials.from_authorized_user_file('gmail_credentials/token.json', SCOPES)
-                st.sidebar.success("Gmail already connected!")
-                return creds
-            if not creds or not creds.valid:
-                if creds and creds.expired and creds.refresh_token:
-                    creds.refresh(Request())
+        client = GoogleOAuth2(client_id, client_secret)
+        authorization_url = asyncio.run(
+            write_authorization_url(client=client,
+                                redirect_uri=redirect_uri)
+        )
+        
+        session_state = session_state.get(token=None)
+
+        if session_state.token is None:
+            try:
+                code = st.experimental_get_query_params()['code']
+            except:
+                st.write(f'''<h1>
+                    Please login using this <a target="_self"
+                    href="{authorization_url}">url</a></h1>''',
+                        unsafe_allow_html=True)
+            else:
+                # Verify token is correct:
+                try:
+                    token = asyncio.run(
+                        write_access_token(client=client,
+                                        redirect_uri=redirect_uri,
+                                        code=code))
+                except:
+                    st.write(f'''<h1>
+                        This account is not allowed or page was refreshed.
+                        Please try again: <a target="_self"
+                        href="{authorization_url}">url</a></h1>''',
+                            unsafe_allow_html=True)
                 else:
-                    connectGmailButton = st.sidebar.button("Connect gmail account")
-                    if connectGmailButton:
-                        #flow = InstalledAppFlow.from_client_secrets_file('gmail_credentials/credentials.json', SCOPES)
-                        #creds = flow.run_local_server(port=0)
-                        flow = client.flow_from_clientsecrets('gmail_credentials/credentials.json', SCOPES)
-                        creds = tools.run_flow(flow=flow)
-                        st.sidebar.success("Gmail connected!")
-                        # Save the credentials for the next run
-                        with open('gmail_credentials/token.json', 'w') as token:
-                            token.write(creds.to_json())
+                    # Check if token has expired:
+                    if token.is_expired():
+                        if token.is_expired():
+                            st.write(f'''<h1>
+                            Login session has ended,
+                            please <a target="_self" href="{authorization_url}">
+                            login</a> again.</h1>
+                            ''')
+                    else:
+                        session_state.token = token
+                        user_id, user_email = asyncio.run(
+                            get_email(client=client,
+                                    token=token['access_token'])
+                        )
+                        session_state.user_id = user_id
+                        session_state.user_email = user_email(creds.to_json())
                         return creds
                     
         def get_sender(messagedata):
@@ -95,7 +149,7 @@ class Utilities:
             body = base64.urlsafe_b64decode(body_raw).decode("utf-8")
             return body
                     
-        creds = connectGmail()
+        creds = Credentials.from_authorized_user_info(session_state.token, SCOPES)
 
         try:
             service = build('gmail', 'v1', credentials=creds)
