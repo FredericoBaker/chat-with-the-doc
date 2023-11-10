@@ -1,4 +1,4 @@
-# 📄 Chat with the doc - Version 2
+# 📄 Chat with the doc
 Project using langchain and streamlit to do a web app that allows you to chat with a document. In this version the web app have a chat like UI with conversation memory.
 
 ![screenshot](image_2023-07-13_175401997.png)
