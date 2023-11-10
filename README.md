@@ -1,6 +1,8 @@
 # 📄 Chat with the doc
 Project using langchain and streamlit to do a web app that allows you to chat with a document or with your email with conversation memory. In this version the web app have a chat like UI with conversation memory.
-Link for the live app: ![link](https://chat-with-the-doc-v2.streamlit.app)
+
+Link for the live app: [Live app](https://chat-with-the-doc-v2.streamlit.app)
+
 ![screenshot](image_2023-07-13_175401997.png)
 
 ## How to run it locally
