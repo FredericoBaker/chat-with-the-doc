@@ -3,7 +3,7 @@ Project using langchain and streamlit to do a web app that allows you to chat wi
 
 Link for the live app: [Live app](https://chat-with-the-doc-v2.streamlit.app)
 
-![screenshot](https://drive.google.com/file/d/1q97TyHVENFJbiqLpo0HP3vZPBCYzqmKa/view?usp=sharing)
+![screenshot](https://github.com/FredericoBaker/chat-with-the-doc/assets/70851418/e2f46922-5fc4-46e2-b701-ecc7ab72e004)
 
 ## How to run it locally
 Follow these steps to set up and run the service locally :
